@@ -11,7 +11,7 @@ from PyQt6.QtCore import Qt
 import win32gui, win32ui, win32con
 from PIL import Image
 
-from utils import SaveConfig
+from utils import SaveConfig, GetRes
 from consts import ICONSTYLE_WIN10, ICONSTYLE_WIN7, ICONSTYLE_WIN_OLD
 
 class ComboBoxWithHeaders(QComboBox):
@@ -137,7 +137,7 @@ class MainWidget(QMainWindow):
 
         self.setGeometry(300, 300, 350, 500)
         self.setWindowTitle('别名工具')
-        self.setWindowIcon(QIcon("icon.ico"))
+        self.setWindowIcon(QIcon(GetRes("icon.ico")))
         self.OSCheck()
         self.show()
 

@@ -1,9 +1,18 @@
 import os
 import re
+import sys
 
 from win32com.shell import shell, shellcon
 import win32api, win32con
 import win32com
+
+def GetRes(path):
+    try:
+        base = sys._MEIPASS
+    except Exception:
+        base = os.path.abspath(".")
+
+    return os.path.join(base, path)
 
 def insertData(data, localizedResourceName: str|None = None, IconResource: str|None = None, IconIndex: int = 0, infoTip: str|None = None) -> bool:
     # TODO: 原本没有的属性不会添加
