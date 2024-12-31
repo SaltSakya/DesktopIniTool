@@ -1,6 +1,7 @@
-import sys
 import os
 import io
+import sys
+import platform
 
 from PyQt6.QtWidgets import (QApplication, QWidget, QMainWindow, QFileDialog,
                              QPushButton, QLabel, QLineEdit, QListWidget, QListWidgetItem, QComboBox,
@@ -136,6 +137,8 @@ class MainWidget(QMainWindow):
 
         self.setGeometry(300, 300, 350, 500)
         self.setWindowTitle('别名工具')
+        self.setWindowIcon(QIcon("icon.ico"))
+        self.OSCheck()
         self.show()
 
     def choose_directory(self):
@@ -244,6 +247,13 @@ class MainWidget(QMainWindow):
         SaveConfig(dir, name, iconPath, iconIdx)
         
         self.LogSuccess("保存成功")
+
+    def OSCheck(self):
+        if platform.system() == "Windows":
+            return
+        
+        self.LogError("当前系统不支持", msec=114514)
+        self.setEnabled(False)
 
 def main():
 
