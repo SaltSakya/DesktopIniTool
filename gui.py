@@ -2,15 +2,33 @@ import sys
 import os
 import io
 
-from PyQt6.QtWidgets import QFileDialog
-from PyQt6.QtWidgets import (QApplication, QWidget, QMainWindow,
+from PyQt6.QtWidgets import (QApplication, QWidget, QMainWindow, QFileDialog,
                              QPushButton, QLabel, QLineEdit, QListWidget, QListWidgetItem, QComboBox,
                              QGroupBox, QHBoxLayout, QVBoxLayout)
-from PyQt6.QtGui import QIcon, QPixmap, QImage
+from PyQt6.QtGui import QIcon, QPixmap, QStandardItemModel, QStandardItem
+from PyQt6.QtCore import Qt
 import win32gui, win32ui, win32con
 from PIL import Image
 
 from utils import SaveConfig
+from consts import ICONSTYLE_WIN10, ICONSTYLE_WIN7, ICONSTYLE_WIN_OLD
+
+class ComboBoxWithHeaders(QComboBox):
+    def __init__(self):
+        super().__init__()
+        self.setEditable(False)
+        self.model = QStandardItemModel(self)
+        self.setModel(self.model)
+
+    def addHeader(self, text):
+        item = QStandardItem(text)
+        item.setFlags(Qt.ItemFlag.NoItemFlags)  # 设置为不可选
+        item.setData(Qt.AlignmentFlag.AlignCenter, Qt.ItemDataRole.TextAlignmentRole)  # 文本居中
+        self.model.appendRow(item)
+
+    def addItem(self, text):
+        item = QStandardItem(text)
+        self.model.appendRow(item)
 
 class MainWidget(QMainWindow):
 
@@ -24,7 +42,7 @@ class MainWidget(QMainWindow):
 
         # 按钮
         pickDirButton = QPushButton("选择文件夹")
-        pickIconButton = QPushButton("选择图标")
+        pickIconButton = QPushButton("浏览……")
         okButton = QPushButton("确定")
         cancelButton = QPushButton("取消")
 
@@ -48,14 +66,12 @@ class MainWidget(QMainWindow):
         self.iconEdit.editingFinished.connect(self.fill_icon_list)
 
         # 预设图标路径
-        self.presetIconPaths = QComboBox()
-        self.presetIconPaths.addItem('')
-        self.presetIconPaths.addItem('Ubuntu')
-        self.presetIconPaths.addItem('Mandriva')
-        self.presetIconPaths.addItem('Fedora')
+        self.presetIconPaths = ComboBoxWithHeaders()
+        self.presetIconPaths.setPlaceholderText("预设图标路径")
+        self.fill_preset_icon_paths()
 
-        # TODO: 预设图标路径绑定
-        #self.presetIconPaths.currentIndexChanged.connect(self.fill_iconEdit_with_preset)
+        # 预设图标路径绑定
+        self.presetIconPaths.currentIndexChanged.connect(self.on_preset_icon_selected)
 
         # 列表视图
         self.iconList = QListWidget()
@@ -89,11 +105,11 @@ class MainWidget(QMainWindow):
 
         iconFileBox = QHBoxLayout()
         iconFileBox.addWidget(self.iconEdit)
-        iconFileBox.addWidget(self.presetIconPaths)
         iconFileBox.addWidget(pickIconButton)
 
         iconBox = QVBoxLayout()
         iconBox.addLayout(iconFileBox)
+        iconBox.addWidget(self.presetIconPaths)
         iconBox.addWidget(self.iconList)
 
         iconGroup = QGroupBox("图标")
@@ -118,16 +134,16 @@ class MainWidget(QMainWindow):
 
         self.setCentralWidget(mainWidget)
 
-        self.setGeometry(300, 300, 350, 400)
+        self.setGeometry(300, 300, 350, 500)
         self.setWindowTitle('别名工具')
         self.show()
 
     def choose_directory(self):
-        dir = QFileDialog.getExistingDirectory(self, "选择目标文件夹", os.path.expanduser("~"))
+        dir = QFileDialog.getExistingDirectory(self, "选择目标文件夹")
         self.dirEdit.setText(dir)
 
     def choose_icon(self):
-        path, _ = QFileDialog.getOpenFileName(self, "选择图标", os.path.expanduser("~"), "图标 (*.ico *.dll *.exe)")
+        path, _ = QFileDialog.getOpenFileName(self, "选择图标", filter="图标 (*.ico *.dll *.exe)")
         self.iconEdit.setText(path)
         self.fill_icon_list()
         
@@ -173,6 +189,30 @@ class MainWidget(QMainWindow):
         win32gui.DeleteObject(hbmp.GetHandle())
         win32gui.DeleteDC(hdc.GetHandleOutput())
         return ico
+    
+    def fill_preset_icon_paths(self):
+        # Windows 10 风格
+        self.presetIconPaths.addHeader("Windows 10 风格")
+        self.presetIconPaths.insertSeparator(114514)
+        self.presetIconPaths.addItems(ICONSTYLE_WIN10)
+        self.presetIconPaths.insertSeparator(114514)
+        # Windows 7 风格
+        self.presetIconPaths.addHeader("Windows 7 风格")
+        self.presetIconPaths.insertSeparator(114514)
+        self.presetIconPaths.addItems(ICONSTYLE_WIN7)
+        self.presetIconPaths.insertSeparator(114514)
+        # Windows 早期风格
+        self.presetIconPaths.addHeader("Windows 早期风格")
+        self.presetIconPaths.insertSeparator(114514)
+        self.presetIconPaths.addItems(ICONSTYLE_WIN_OLD)
+        pass
+
+    def on_preset_icon_selected(self):
+        if self.presetIconPaths.currentIndex() == -1: return
+
+        self.iconEdit.setText(self.presetIconPaths.currentText())
+        self.iconEdit.editingFinished.emit()
+        self.presetIconPaths.setCurrentIndex(-1)
 
     def LogMessage(self, msg:str, msec:int=3000):
         self.statusBar().setStyleSheet("color: black")

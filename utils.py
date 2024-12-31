@@ -1,19 +1,24 @@
 import os
 import re
 
-import win32com.shell
-import win32com.shell.shell
-import win32com.shell.shellcon
+from win32com.shell import shell, shellcon
 import win32api, win32con
 import win32com
 
-def insertData(data, localizedResourceName: str|None = None, IconResource: str|None = None, IconIndex: int = 0) -> bool:
+def insertData(data, localizedResourceName: str|None = None, IconResource: str|None = None, IconIndex: int = 0, infoTip: str|None = None) -> bool:
     # TODO: 原本没有的属性不会添加
     for title, datas in data:
         if title == ".ShellClassInfo":
-            for i in range(len(datas)):
-                if datas[i][0] == "LocalizedResourceName" and localizedResourceName: datas[i] = ("LocalizedResourceName", localizedResourceName)
-                elif datas[i][0] == "IconResource" and IconResource: datas[i] = ("IconResource", f"{IconResource},{IconIndex}")
+            heads = {data[0]: i for i, data in enumerate(datas)}
+            if localizedResourceName:
+                if "LocalizedResourceName" not in heads: datas.append(("LocalizedResourceName", localizedResourceName))
+                else: datas[heads["LocalizedResourceName"]] = ("LocalizedResourceName", localizedResourceName)
+            if IconResource:
+                if "IconResource" not in heads: datas.append(("IconResource", f"{IconResource},{IconIndex}"))
+                else: datas[heads["IconResource"]] = ("IconResource", f"{IconResource},{IconIndex}")
+            if infoTip:
+                if "InfoTip" not in heads: datas.append(("InfoTip", infoTip))
+                else: datas[heads["InfoTip"]] = ("InfoTip", infoTip)
             return True
     return False
 
@@ -44,7 +49,6 @@ def loadConfig(dir: str, reset_file_attribute: bool = True):
     return data
 
 def SaveConfig(dir: str, localizedResourceName: str|None = None, iconResource: str|None = None, iconIndex: int = 0, infoTip: str|None = None):
-    # TODO: ico格式的图标表示可能不同，之后要试一下
     if localizedResourceName is None and iconResource is None:
         return
     
@@ -68,5 +72,5 @@ def SaveConfig(dir: str, localizedResourceName: str|None = None, iconResource: s
     win32api.SetFileAttributes(folder_path, win32con.FILE_ATTRIBUTE_SYSTEM | win32con.FILE_ATTRIBUTE_HIDDEN| win32con.FILE_ATTRIBUTE_ARCHIVE)
     win32api.SetFileAttributes(dir, win32con.FILE_ATTRIBUTE_SYSTEM)
 
-    win32com.shell.shell.SHChangeNotify(win32com.shell.shellcon.SHCNE_ATTRIBUTES, win32com.shell.shellcon.SHCNF_PATH, dir.encode(), None)
-    win32com.shell.shell.SHChangeNotify(win32com.shell.shellcon.SHCNE_UPDATEITEM, win32com.shell.shellcon.SHCNF_PATH, dir.encode(), None)
+    shell.SHChangeNotify(shellcon.SHCNE_ATTRIBUTES, shellcon.SHCNF_PATH, dir.encode(), None)
+    shell.SHChangeNotify(shellcon.SHCNE_UPDATEITEM, shellcon.SHCNF_PATH, dir.encode(), None)
