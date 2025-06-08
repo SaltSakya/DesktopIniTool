@@ -42,7 +42,7 @@ jobs:
         name: v${{ github.event.inputs.version }}
         body: ${{ github.event.inputs.description }}
         files: |
-          dist/*          # 包含所有构建产物
+          dist/*.exe
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
