@@ -142,17 +142,23 @@ class MainWidget(QMainWindow):
         self.show()
 
     def choose_directory(self):
-        dir = QFileDialog.getExistingDirectory(self, "选择目标文件夹")
+        dir = QFileDialog.getExistingDirectory(self, "选择目标文件夹", self.dirEdit.text())
+        if not dir: return
         self.dirEdit.setText(dir)
 
     def choose_icon(self):
-        path, _ = QFileDialog.getOpenFileName(self, "选择图标", filter="图标 (*.ico *.dll *.exe)")
+        path, _ = QFileDialog.getOpenFileName(self, "选择图标", self.iconEdit.text(), filter="图标 (*.ico *.dll *.exe)")
+        if not path: return
         self.iconEdit.setText(path)
         self.fill_icon_list()
         
     def fill_icon_list(self):
         self.iconList.clear()
         if self.iconEdit.text() == "":
+            self.LogError("图标路径为空")
+            return
+        if not os.path.exists(self.iconEdit.text()):
+            self.LogError("图标路径不存在")
             return
         
         ext = self.iconEdit.text().split(".")[-1]
