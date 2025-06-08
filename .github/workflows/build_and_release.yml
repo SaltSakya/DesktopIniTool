@@ -1,0 +1,49 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        type: string
+      description:
+        description: 'Release description'
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    name: Build and release on Windows
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+
+    - name: Run build script
+      run: .\build.cmd
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.event.inputs.version }}
+        name: v${{ github.event.inputs.version }}
+        body: ${{ github.event.inputs.description }}
+        files: |
+          dist/*          # 包含所有构建产物
+          your_bin/*.exe  # 替换为实际的二进制文件路径
+        draft: false
+        prerelease: false
+        token: ${{ secrets.GITHUB_TOKEN }}
