@@ -36,7 +36,9 @@ jobs:
         pip install pyinstaller
 
     - name: Run build script
-      run: .\build.cmd
+      run: |
+        .\build.cmd
+        ren .\dist\main.exe DesktopIniTool.exe
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -45,7 +47,7 @@ jobs:
         name: v${{ github.event.inputs.version }}
         body: ${{ github.event.inputs.description }}
         files: |
-          dist/*.exe
+          dist/DesktopIniTool.exe
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
